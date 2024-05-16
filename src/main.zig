@@ -98,21 +98,22 @@ const Player = struct {
     cpBody: *cp.cpBody,
     cpShape: *cp.cpShape,
 
-    const mass = 80;
+    const mass = 1;
     const width = 25;
     const height = 25;
-    const radius = 30;
+    const radius = 0;
 
     fn init(space: *cp.struct_cpSpace) !Player {
         const rect = .{ .size = .{ .x = 25, .y = 25 }, .color = rl.Color.dark_green };
         const pos = .{ .x = 50, .y = 50 };
-        const speed = 250;
+        const speed = 1000;
 
         const moment = cp.cpMomentForBox(mass, width, height);
         const body = cp.cpBodyNew(mass, moment) orelse return error.GenericError;
 
         //cpSpaceAddBody returns the same pointer we pass in... idk why
         _ = cp.cpSpaceAddBody(space, body) orelse return error.GenericError;
+        // cp.cpBodySetDamping(body, 0); // max damp
 
         cp.cpBodySetPosition(body, cp.cpv(pos.x, pos.y));
 
@@ -127,7 +128,7 @@ const Player = struct {
         const newPos = cp.cpBodyGetPosition(self.cpBody);
         self.centerPos = .{ .x = @floatCast(newPos.x), .y = @floatCast(newPos.y) };
 
-        var moveVec = cp.cpVect {.x = 0, .y = 0};
+        var moveVec = cp.cpVect{ .x = 0, .y = 0 };
         if (rl.isKeyDown(rl.KeyboardKey.key_w)) {
             moveVec.y -= 1;
         }
@@ -144,7 +145,8 @@ const Player = struct {
         moveVec = cp.cpvnormalize(moveVec);
         moveVec = cp.cpvmult(moveVec, self.speed);
 
-        cp.cpBodySetVelocity(self.cpBody, moveVec);
+        cp.cpBodyApplyForceAtLocalPoint(self.cpBody, moveVec, .{ .x = 0, .y = 0});
+        // cp.cpBodySetVelocity(self.cpBody, moveVec);
     }
 
     fn draw(self: Player) void {
