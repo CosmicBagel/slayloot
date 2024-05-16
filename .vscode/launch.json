@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "codelldb",
+            "name": "LLDB: Launch",
+            "request": "launch",
+            "program": "${workspaceFolder}/zig-out/bin/main"
+        }
+    ]
+}
