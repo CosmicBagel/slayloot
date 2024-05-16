@@ -15,6 +15,7 @@ pub const Player = struct {
         speedMax: f64,
         running: bool,
         runningMultiplier: f64,
+        damping: f64,
     };
 
     centerPos: rl.Vector2,
@@ -31,6 +32,7 @@ pub const Player = struct {
     const speedMax = 200;
     const moveForce = 12 * 1_000 * 80;
     const runningMultiplier = 2.5;
+    const damping = 0.6;
 
     pub fn init(space: *cp.struct_cpSpace, allocator: std.mem.Allocator) !Player {
         const rect = .{ .size = .{ .x = 25, .y = 25 }, .color = rl.Color.dark_green };
@@ -46,6 +48,7 @@ pub const Player = struct {
         movement.moveForce = moveForce;
         movement.running = false;
         movement.runningMultiplier = runningMultiplier;
+        movement.damping = damping;
         cp.cpBodySetUserData(body, movement);
 
         //cpSpaceAddBody returns the same pointer we pass in... idk why
@@ -90,9 +93,11 @@ pub const Player = struct {
 
     fn bodyUpdateVelocity(body: ?*cp.cpBody, gravity: cp.cpVect, _: cp.cpFloat, dt: cp.cpFloat) callconv(.C) void {
         // ignored input is damping
-        cp.cpBodyUpdateVelocity(body, gravity, 0.6, dt); // 0 = max damping
 
         const movement: *movementData = @ptrCast(@alignCast(cp.cpBodyGetUserData(body)));
+
+        cp.cpBodyUpdateVelocity(body, gravity, movement.damping, dt); // 0 = max damping
+
         const vel = cp.cpBodyGetVelocity(body);
         cp.cpBodySetVelocity(body, cp.cpvclamp(vel, if (movement.running) movement.speedMax * movement.runningMultiplier else movement.speedMax));
     }
