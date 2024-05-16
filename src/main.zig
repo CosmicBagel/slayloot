@@ -20,13 +20,15 @@ pub fn main() !void {
     defer cp.cpSpaceFree(space);
     const gravity = cp.cpv(0, 0);
     cp.cpSpaceSetGravity(space, gravity);
+    cp.cpSpaceSetDamping(space, 1); // min damp
 
     // init game objects
     var p = try Player.init(space);
     defer p.deinit();
 
     var walls: [42]Wall = undefined;
-    Wall.generateWalls(&walls, 16, 8);
+    try Wall.generateWalls(&walls, space, 16, 8);
+    defer Wall.deinitWalls(&walls);
 
     // game loop
     while (!rl.windowShouldClose() and rl.isKeyUp(rl.KeyboardKey.key_q)) {
@@ -35,6 +37,9 @@ pub fn main() !void {
 
         // update game objects
         p.update();
+        for (&walls) |*wall| {
+            wall.update();
+        }
 
         // draw game objects
         rl.beginDrawing();
@@ -157,6 +162,7 @@ const Wall = struct {
     pos: rl.Vector2,
     size: rl.Vector2,
     color: rl.Color,
+    cpShape: *cp.cpShape,
 
     const colors = [_]rl.Color{
         rl.Color.dark_gray,
@@ -165,11 +171,49 @@ const Wall = struct {
         rl.Color.orange,
     };
 
-    fn draw(self: Wall) void {
-        rl.drawRectangleV(self.pos, self.size, self.color);
+    fn init(space: *cp.struct_cpSpace, pos: rl.Vector2, size: rl.Vector2, color: rl.Color) !Wall {
+        const radius = 0;
+
+        //cpSpaceAddBody returns the same pointer we pass in... idk why
+        const body = cp.cpSpaceGetStaticBody(space) orelse return error.GenericError;
+        // _ = cp.cpSpaceAddBody(space, body) orelse return error.GenericError;
+
+        cp.cpBodySetPosition(body, cp.cpv(pos.x, pos.y));
+
+        const shape = cp.cpBoxShapeNew(body, size.x, size.y, radius) orelse return error.GenericError;
+        //cpSpaceAddShape also returns the same pointer we pass in...
+        _ = cp.cpSpaceAddShape(space, shape) orelse return error.GenericError;
+
+        return Wall{
+            .pos = pos,
+            .size = size,
+            .color = color,
+            .cpShape = shape,
+        };
     }
 
-    fn generateWalls(buffer: []Wall, width: comptime_int, height: comptime_int) void {
+    fn draw(self: Wall) void {
+        // rl.drawRectangleV(self.pos, self.size, self.color);
+        const offsetPos = .{ .x = self.pos.x - self.size.x / 2, .y = self.pos.y - self.size.y / 2 };
+        rl.drawRectangleV(offsetPos, self.size, self.color);
+    }
+
+    fn update(_: *Wall) void {
+        // const newPos = cp.cpBodyGetPosition(self.cpBody);
+        // self.pos = .{ .x = @floatCast(newPos.x), .y = @floatCast(newPos.y) };
+    }
+
+    fn deinitWalls(buffer: []Wall) void {
+        for (buffer) |*wall| {
+            wall.deinit();
+        }
+    }
+
+    fn deinit(self: *Wall) void {
+        cp.cpShapeFree(self.cpShape);
+    }
+
+    fn generateWalls(buffer: []Wall, space: *cp.struct_cpSpace, width: comptime_int, height: comptime_int) !void {
         const side = enum { top, left, right, bottom };
 
         var current_side = side.top;
@@ -177,10 +221,11 @@ const Wall = struct {
         const side_size = height - 2; //- 2 for top and bottom walls
 
         for (buffer, 0..) |*wall, i| {
+            var pos: rl.Vector2 = rl.Vector2.init(0, 0);
             switch (current_side) {
                 .top => {
                     const x_pos: f32 = @floatFromInt(side_count * 25);
-                    wall.pos = .{ .x = x_pos, .y = 0 };
+                    pos = .{ .x = x_pos, .y = 0 };
                     if (side_count + 1 == width) {
                         current_side = .bottom;
                         side_count = 0;
@@ -189,7 +234,7 @@ const Wall = struct {
                 .bottom => {
                     const x_pos: f32 = @floatFromInt(side_count * 25);
                     const y_pos: f32 = @floatFromInt((height - 1) * 25);
-                    wall.pos = .{ .x = x_pos, .y = y_pos };
+                    pos = .{ .x = x_pos, .y = y_pos };
                     if (side_count + 1 == width) {
                         current_side = .left;
                         side_count = 0;
@@ -198,7 +243,7 @@ const Wall = struct {
                 .left => {
                     const y_pos: f32 = @floatFromInt(side_count * 25);
                     const x_pos: f32 = 0;
-                    wall.pos = .{ .x = x_pos, .y = y_pos };
+                    pos = .{ .x = x_pos, .y = y_pos };
                     if (side_count + 1 == side_size) {
                         current_side = .right;
                         side_count = 0;
@@ -207,12 +252,14 @@ const Wall = struct {
                 .right => {
                     const y_pos: f32 = @floatFromInt(side_count * 25);
                     const x_pos: f32 = @floatFromInt((width - 1) * 25);
-                    wall.pos = .{ .x = x_pos, .y = y_pos };
+                    pos = .{ .x = x_pos, .y = y_pos };
                 },
             }
 
-            wall.size = .{ .x = 25, .y = 25 };
-            wall.color = colors[i % colors.len];
+            const size = .{ .x = 25, .y = 25 };
+            const color = colors[i % colors.len];
+            wall.* = try init(space, pos, size, color);
+
             side_count += 1;
         }
     }
