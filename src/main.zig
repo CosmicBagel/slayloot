@@ -29,7 +29,9 @@ pub fn main() !void {
     cp.cpSpaceSetDamping(space, 1); // min damp
 
     // init game objects
-    var p = try sl.Player.init(space);
+    var playerDataBuffer: [1000]u8 = undefined;
+    var playerDataFba = std.heap.FixedBufferAllocator.init(&playerDataBuffer);
+    var p = try sl.Player.init(space, playerDataFba.allocator());
     defer p.deinit();
 
     var walls: [42]sl.Wall = undefined;

@@ -1,4 +1,6 @@
+const std = @import("std");
 const rl = @import("raylib");
+
 const cp = @cImport({
     @cInclude("chipmunk/chipmunk.h");
 });
@@ -8,36 +10,55 @@ const sl = struct {
 };
 
 pub const Player = struct {
+    const movementData = struct {
+        moveForce: f64,
+        speedMax: f64,
+        running: bool,
+        runningMultiplier: f64,
+    };
+
     centerPos: rl.Vector2,
-    speed: f64,
     rect: sl.DrawRectangleComponent,
     cpBody: *cp.cpBody,
     cpShape: *cp.cpShape,
+    movement: *movementData,
+    allocator: std.mem.Allocator,
 
-    const mass = 1;
+    const mass = 80;
     const width = 25;
     const height = 25;
-    const radius = 0;
+    const radius = 25.0 / 2.0;
+    const speedMax = 200;
+    const moveForce = 12 * 1_000 * 80;
+    const runningMultiplier = 2.5;
 
-    pub fn init(space: *cp.struct_cpSpace) !Player {
+    pub fn init(space: *cp.struct_cpSpace, allocator: std.mem.Allocator) !Player {
         const rect = .{ .size = .{ .x = 25, .y = 25 }, .color = rl.Color.dark_green };
         const pos = .{ .x = 50, .y = 50 };
-        const speed = 1000;
 
-        const moment = cp.cpMomentForBox(mass, width, height);
+        const moment = std.math.inf(f64); //infinite moment disabled rotation // cp.cpMomentForBox(mass, width, height);
         const body = cp.cpBodyNew(mass, moment) orelse return error.GenericError;
+        cp.cpBodySetVelocityUpdateFunc(body, bodyUpdateVelocity);
+
+        // save a pointer to self to the body
+        const movement: *movementData = try allocator.create(movementData);
+        movement.speedMax = speedMax;
+        movement.moveForce = moveForce;
+        movement.running = false;
+        movement.runningMultiplier = runningMultiplier;
+        cp.cpBodySetUserData(body, movement);
 
         //cpSpaceAddBody returns the same pointer we pass in... idk why
         _ = cp.cpSpaceAddBody(space, body) orelse return error.GenericError;
-        // cp.cpBodySetDamping(body, 0); // max damp
 
         cp.cpBodySetPosition(body, cp.cpv(pos.x, pos.y));
 
-        const shape = cp.cpBoxShapeNew(body, width, height, radius) orelse return error.GenericError;
+        // const shape = cp.cpBoxShapeNew(body, width, height, radius) orelse return error.GenericError;
+        const shape = cp.cpCircleShapeNew(body, 25.0 / 2.0, cp.cpv(0, 0)) orelse return error.GenericError;
         //cpSpaceAddShape also returns the same pointer we pass in...
         _ = cp.cpSpaceAddShape(space, shape) orelse return error.GenericError;
 
-        return Player{ .rect = rect, .centerPos = pos, .speed = speed, .cpBody = body, .cpShape = shape };
+        return Player{ .rect = rect, .centerPos = pos, .cpBody = body, .cpShape = shape, .movement = movement, .allocator = allocator };
     }
 
     pub fn update(self: *Player) void {
@@ -58,11 +79,22 @@ pub const Player = struct {
             moveVec.x -= 1;
         }
 
+        self.movement.running = rl.isKeyDown(rl.KeyboardKey.key_left_shift);
+
         moveVec = cp.cpvnormalize(moveVec);
-        moveVec = cp.cpvmult(moveVec, self.speed);
+        moveVec = cp.cpvmult(moveVec, self.movement.moveForce);
 
         cp.cpBodyApplyForceAtLocalPoint(self.cpBody, moveVec, .{ .x = 0, .y = 0 });
         // cp.cpBodySetVelocity(self.cpBody, moveVec);
+    }
+
+    fn bodyUpdateVelocity(body: ?*cp.cpBody, gravity: cp.cpVect, _: cp.cpFloat, dt: cp.cpFloat) callconv(.C) void {
+        // ignored input is damping
+        cp.cpBodyUpdateVelocity(body, gravity, 0.6, dt); // 0 = max damping
+
+        const movement: *movementData = @ptrCast(@alignCast(cp.cpBodyGetUserData(body)));
+        const vel = cp.cpBodyGetVelocity(body);
+        cp.cpBodySetVelocity(body, cp.cpvclamp(vel, if (movement.running) movement.speedMax * movement.runningMultiplier else movement.speedMax));
     }
 
     pub fn draw(self: Player) void {
@@ -70,6 +102,8 @@ pub const Player = struct {
     }
 
     pub fn deinit(self: *Player) void {
+        self.allocator.destroy(self.movement);
+
         // clean up cpShapes first then cpBody
         cp.cpShapeFree(self.cpShape);
         cp.cpBodyFree(self.cpBody);
