@@ -50,17 +50,19 @@ pub fn main() !void {
         }
 
         // draw game objects
-        rl.beginDrawing();
-        defer rl.endDrawing();
+        {
+            rl.beginDrawing();
+            defer rl.endDrawing();
 
-        p.draw();
+            p.draw();
 
-        for (walls) |wall| {
-            wall.draw();
+            for (walls) |wall| {
+                wall.draw();
+            }
+
+            rl.clearBackground(rl.Color.white);
+            rl.drawText("dungeon time", 190, 200, 20, rl.Color.light_gray);
         }
-
-        rl.clearBackground(rl.Color.white);
-        rl.drawText("dungeon time", 190, 200, 20, rl.Color.light_gray);
     }
 }
 
