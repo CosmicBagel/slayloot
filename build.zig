@@ -49,7 +49,11 @@ pub fn build(b: *std.Build) void {
 
     const c_flags_default = &.{
         "-std=gnu99",
-        "-ffast-math",
+        // alright SO, chipmunk heavily relies on infinite float values
+        // if you use these optimization flags, shit gets weird, do not recommend
+        // "-ffast-math", (implies -ffinite-math-only)
+        // "-ffinite-math-only",
+        // see https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html#index-ffast-math
         "-Wall",
     };
 
