@@ -25,6 +25,7 @@ pub const Player = struct {
     movement: *movementData,
     allocator: std.mem.Allocator,
 
+    // default values
     const mass = 80;
     const width = 25;
     const height = 25;
@@ -35,7 +36,10 @@ pub const Player = struct {
     const damping = 0.6;
 
     pub fn init(space: *cp.struct_cpSpace, allocator: std.mem.Allocator) !Player {
-        const rect = .{ .size = .{ .x = 25, .y = 25 }, .color = rl.Color.dark_green };
+        const rect = .{
+            .size = .{ .x = 25, .y = 25 },
+            .color = rl.Color.dark_green,
+        };
         const pos = .{ .x = 50, .y = 50 };
 
         const moment = std.math.inf(f64); //infinite moment disabled rotation // cp.cpMomentForBox(mass, width, height);
@@ -56,12 +60,19 @@ pub const Player = struct {
 
         cp.cpBodySetPosition(body, cp.cpv(pos.x, pos.y));
 
-        // const shape = cp.cpBoxShapeNew(body, width, height, radius) orelse return error.GenericError;
+        // const shape = cp.cpBoxShapeNew(body, width, height, 0) orelse return error.GenericError;
         const shape = cp.cpCircleShapeNew(body, 25.0 / 2.0, cp.cpv(0, 0)) orelse return error.GenericError;
         //cpSpaceAddShape also returns the same pointer we pass in...
         _ = cp.cpSpaceAddShape(space, shape) orelse return error.GenericError;
 
-        return Player{ .rect = rect, .centerPos = pos, .cpBody = body, .cpShape = shape, .movement = movement, .allocator = allocator };
+        return Player{
+            .rect = rect,
+            .centerPos = pos,
+            .cpBody = body,
+            .cpShape = shape,
+            .movement = movement,
+            .allocator = allocator,
+        };
     }
 
     pub fn update(self: *Player) void {
@@ -99,7 +110,13 @@ pub const Player = struct {
         cp.cpBodyUpdateVelocity(body, gravity, movement.damping, dt); // 0 = max damping
 
         const vel = cp.cpBodyGetVelocity(body);
-        cp.cpBodySetVelocity(body, cp.cpvclamp(vel, if (movement.running) movement.speedMax * movement.runningMultiplier else movement.speedMax));
+        cp.cpBodySetVelocity(
+            body,
+            cp.cpvclamp(
+                vel,
+                if (movement.running) movement.speedMax * movement.runningMultiplier else movement.speedMax,
+            ),
+        );
     }
 
     pub fn draw(self: Player) void {

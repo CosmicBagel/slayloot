@@ -40,7 +40,10 @@ pub const Wall = struct {
 
     pub fn draw(self: Wall) void {
         // rl.drawRectangleV(self.pos, self.size, self.color);
-        const offsetPos = .{ .x = self.pos.x - self.size.x / 2, .y = self.pos.y - self.size.y / 2 };
+        const offsetPos = .{
+            .x = self.pos.x - self.size.x / 2,
+            .y = self.pos.y - self.size.y / 2,
+        };
         rl.drawRectangleV(offsetPos, self.size, self.color);
     }
 

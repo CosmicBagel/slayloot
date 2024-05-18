@@ -11,7 +11,10 @@ pub const DrawRectangleComponent = struct {
     color: rl.Color,
 
     pub fn draw(self: DrawRectangleComponent, centerPos: rl.Vector2) void {
-        const offsetPos = .{ .x = centerPos.x - self.size.x / 2, .y = centerPos.y - self.size.y / 2 };
+        const offsetPos = .{
+            .x = centerPos.x - self.size.x / 2,
+            .y = centerPos.y - self.size.y / 2,
+        };
         rl.drawRectangleV(offsetPos, self.size, self.color);
     }
 };
