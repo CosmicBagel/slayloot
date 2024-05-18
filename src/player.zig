@@ -81,10 +81,10 @@ pub const Player = struct {
 
         var moveVec = cp.cpVect{ .x = 0, .y = 0 };
         if (rl.isKeyDown(rl.KeyboardKey.key_w)) {
-            moveVec.y -= 1;
+            moveVec.y += 1;
         }
         if (rl.isKeyDown(rl.KeyboardKey.key_s)) {
-            moveVec.y += 1;
+            moveVec.y -= 1;
         }
         if (rl.isKeyDown(rl.KeyboardKey.key_d)) {
             moveVec.x += 1;

@@ -21,6 +21,14 @@ pub fn main() !void {
 
     rl.setTargetFPS(60);
 
+    // init camera
+    var camera: rl.Camera2D = rl.Camera2D{
+        .target = .{ .x = screenWidth / -2, .y = screenHeight / -2 },
+        .offset = .{ .x = 0, .y = 0 },
+        .rotation = 0,
+        .zoom = 1,
+    };
+
     // init physics
     const space = cp.cpSpaceNew() orelse return error.GenericError;
     defer cp.cpSpaceFree(space);
@@ -49,18 +57,29 @@ pub fn main() !void {
             wall.update();
         }
 
+        camera.target.x = p.centerPos.x - (screenWidth / 2);
+        camera.target.y = -p.centerPos.y - (screenHeight / 2);
+
         // draw game objects
         {
             rl.beginDrawing();
             defer rl.endDrawing();
 
-            p.draw();
+            rl.clearBackground(rl.Color.white);
 
-            for (walls) |wall| {
-                wall.draw();
+            {
+                // draw 2d scene
+                rl.beginMode2D(camera);
+                defer rl.endMode2D();
+
+                p.draw();
+
+                for (walls) |wall| {
+                    wall.draw();
+                }
             }
 
-            rl.clearBackground(rl.Color.white);
+            // draw ui and screen space stuff
             rl.drawText("dungeon time", 190, 200, 20, rl.Color.light_gray);
         }
     }

@@ -13,7 +13,7 @@ pub const DrawRectangleComponent = struct {
     pub fn draw(self: DrawRectangleComponent, centerPos: rl.Vector2) void {
         const offsetPos = .{
             .x = centerPos.x - self.size.x / 2,
-            .y = centerPos.y - self.size.y / 2,
+            .y = (centerPos.y + self.size.y / 2) * -1,
         };
         rl.drawRectangleV(offsetPos, self.size, self.color);
     }
