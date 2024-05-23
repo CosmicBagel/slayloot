@@ -1,3 +1,37 @@
+// dungeon - wolf den - a large burrow, three rooms, wolfs have been attacking
+//   the village, normally the wolves keep to themselves
+// enemy - wolf - runs lines perpendicular to player's position, then runs in
+//   for attacks, melee attacks
+// enemy - wolf (iced) - like wolf, but is immune to damage until ice armour is
+//   destroyed
+// enemy - human skeleton - walks in straight lines (up down left right), tries
+//   to pick directions away from player if the player gets to close avoid
+//   melee attacks, moves slowly (he's got old rickety bones), casts firebolt at
+//   player, can enrage and fear low intellect creatures, has a necromancer's
+//   marking on its skull, it glows faintly
+// weapon - walking stick - shoves and stuns enemies, does small amount of damage
+// weapon - rusty sword - can kill a wolf in 2 or 3 hits, but does no knockback
+//   or stun
+// weapon - torch - normally does very little damage, but can break ice armour
+//   quickly (may also light bats on fire)
+// mechanic - dodge roll - roll in direction of movement, initial frames of the
+//   roll are invulnerable
+// mechanic - target lock-on - allows player to strafe around target and attack
+// mechanic - weapon swapping - use keys 1-3 to change weapons, weapon swapping
+//   interrupts attacks
+// mechanic - player knockback on damage taken - use keys 1-3 to change
+//   weapons, weapon swapping interrupts attacks
+// mechanic - killing an enemy results in health regain for the player
+// mechanic - can not progress to next room till all enemies are killed in
+//   current room
+// system - walking between rooms
+// system - rooms - all rooms are visually the same, just different enemies,
+//   doors on the left and right, walls all around, left door opens when all
+//   enemies are dead, text on screen indicates which room you're in (to help
+//   with the visual sameness)
+// system - damage (with damage type), knockback, stun
+// system - notify on kill (do not try to build a full event system lol)
+
 const std = @import("std");
 const rl = @import("raylib");
 
@@ -60,7 +94,7 @@ pub fn main() !void {
         camera.target.x = p.centerPos.x - (screenWidth / 2);
         camera.target.y = -p.centerPos.y - (screenHeight / 2);
 
-        // draw game objects
+        // draw everything
         {
             rl.beginDrawing();
             defer rl.endDrawing();
