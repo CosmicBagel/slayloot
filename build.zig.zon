@@ -16,9 +16,8 @@
     // internet connectivity.
     .dependencies = .{
         .@"raylib-zig" = .{
-            // temporary, switching back to Not-Nik's once pull request is merged, or the repo updates to newer commit of raylib
-            .url = "https://github.com/CosmicBagel/raylib-zig/archive/7e3bde259049638996d023997c48303dd920566b.tar.gz",
-            .hash = "12206dbec056df7b0ef167bfe135a6c659d4a98d44efa53893a67fb4566b5ba5f064"
+            .url = "https://github.com/Not-Nik/raylib-zig/archive/39909cdcb35a30cef55b43814f84aa7f85705ac6.tar.gz",
+            .hash = "122050b7d335326149738d72f74c8d1b7bdb89c07b12c1fa9b87fe61b69ae7750a21"
         },
         .@"chipmunk" = .{
             .url = "https://github.com/slembcke/Chipmunk2D/archive/refs/heads/master.zip",
