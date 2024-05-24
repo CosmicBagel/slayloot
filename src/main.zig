@@ -50,8 +50,13 @@ pub fn main() !void {
     var windowWidth: i32 = 1280;
     var windowHeight: i32 = 720;
 
-    const renderWidth = 640;
-    const renderHeight = 360;
+    // nes PAL screen had 256x240 (NTSC was smaller), taking this and widening
+    // it by increments of 8 to get it closer to a 16:9 ratio
+    const renderWidth = 424 + 3; // 53 8x8 tiles + 3 pixels to make it fit 16:9 nicely
+    const renderHeight = 240; // 30 8x8 tiles
+    // reserve two tiles at the top for some UI stuff (health, weapon)
+    // so rooms can be 53 tiles wide and 28 tiles tall
+    // 26 x 14 16x16 tiles + 1 8x8 tile horizontally
 
     rl.initWindow(windowWidth, windowHeight, "slayloot");
     rl.setWindowState(rl.ConfigFlags.flag_window_resizable);
