@@ -137,14 +137,16 @@ pub fn main() !void {
             const srcRect: rl.Rectangle = rl.Rectangle.init(0, 0, renderWidth, -renderHeight);
 
             // preserve aspect ratio of render
-            const horzScale = @as(f32, @floatFromInt(windowHeight)) / renderHeight;
-            const vertScale = @as(f32, @floatFromInt(windowWidth)) / renderWidth;
+            const windowWidthF32 = @as(f32, @floatFromInt(windowWidth));
+            const windowHeightF32 = @as(f32, @floatFromInt(windowHeight));
+            const horzScale = windowHeightF32 / renderHeight;
+            const vertScale = windowWidthF32 / renderWidth;
             const scale = if (horzScale > vertScale) vertScale else horzScale;
             const destWidth = renderWidth * scale;
             const destHeight = renderHeight * scale;
             const destRect: rl.Rectangle = rl.Rectangle.init(
-                (@as(f32, @floatFromInt(windowWidth)) - destWidth) / 2,
-                (@as(f32, @floatFromInt(windowHeight)) - destHeight) / 2,
+                (windowWidthF32 - destWidth) / 2,
+                (windowHeightF32 - destHeight) / 2,
                 destWidth,
                 destHeight,
             );
