@@ -27,9 +27,9 @@ pub const Player = struct {
 
     // default values
     const mass = 80;
-    const width = 25;
-    const height = 25;
-    const radius = 25.0 / 2.0;
+    const width = 16;
+    const height = width;
+    const radius = width / 2.0;
     const speedMax = 200;
     const moveForce = 12 * 1_000 * 80;
     const runningMultiplier = 2.5;
@@ -37,7 +37,7 @@ pub const Player = struct {
 
     pub fn init(space: *cp.struct_cpSpace, allocator: std.mem.Allocator) !Player {
         const rect = .{
-            .size = .{ .x = 25, .y = 25 },
+            .size = .{ .x = width, .y = height },
             .color = rl.Color.dark_green,
         };
         const pos = .{ .x = 50, .y = 50 };
@@ -61,7 +61,7 @@ pub const Player = struct {
         cp.cpBodySetPosition(body, cp.cpv(pos.x, pos.y));
 
         // const shape = cp.cpBoxShapeNew(body, width, height, 0) orelse return error.GenericError;
-        const shape = cp.cpCircleShapeNew(body, 25.0 / 2.0, cp.cpv(0, 0)) orelse return error.GenericError;
+        const shape = cp.cpCircleShapeNew(body, radius, cp.cpv(0, 0)) orelse return error.GenericError;
         //cpSpaceAddShape also returns the same pointer we pass in...
         _ = cp.cpSpaceAddShape(space, shape) orelse return error.GenericError;
 
