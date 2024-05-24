@@ -141,6 +141,7 @@ pub fn main() !void {
             const windowHeightF32 = @as(f32, @floatFromInt(windowHeight));
             const horzScale = windowHeightF32 / renderHeight;
             const vertScale = windowWidthF32 / renderWidth;
+            // use smaller scale (otherwise some of the render would go outside the window)
             const scale = if (horzScale > vertScale) vertScale else horzScale;
             const destWidth = renderWidth * scale;
             const destHeight = renderHeight * scale;
