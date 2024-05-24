@@ -133,8 +133,21 @@ pub fn main() !void {
             rl.beginDrawing();
             defer rl.endDrawing();
 
+            rl.clearBackground(rl.Color.black);
             const srcRect: rl.Rectangle = rl.Rectangle.init(0, 0, renderWidth, -renderHeight);
-            const destRect: rl.Rectangle = rl.Rectangle.init(0, 0, @floatFromInt(windowWidth), @floatFromInt(windowHeight));
+
+            // preserve aspect ratio of render
+            const horzScale = @as(f32, @floatFromInt(windowHeight)) / renderHeight;
+            const vertScale = @as(f32, @floatFromInt(windowWidth)) / renderWidth;
+            const scale = if (horzScale > vertScale) vertScale else horzScale;
+            const destWidth = renderWidth * scale;
+            const destHeight = renderHeight * scale;
+            const destRect: rl.Rectangle = rl.Rectangle.init(
+                (@as(f32, @floatFromInt(windowWidth)) - destWidth) / 2,
+                (@as(f32, @floatFromInt(windowHeight)) - destHeight) / 2,
+                destWidth,
+                destHeight,
+            );
             const originVec: rl.Vector2 = rl.Vector2.init(0, 0);
             rl.drawTexturePro(renderTarget.texture, srcRect, destRect, originVec, 0, rl.Color.white);
 
