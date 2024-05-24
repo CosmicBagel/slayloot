@@ -47,21 +47,29 @@ const sl = struct {
 
 pub fn main() !void {
     //raylib init
-    const screenWidth = 800;
-    const screenHeight = 450;
+    var windowWidth: i32 = 1280;
+    var windowHeight: i32 = 720;
 
-    rl.initWindow(screenWidth, screenHeight, "slayloot");
+    const renderWidth = 640;
+    const renderHeight = 360;
+
+    rl.initWindow(windowWidth, windowHeight, "slayloot");
+    rl.setWindowState(rl.ConfigFlags.flag_window_resizable);
+    rl.setWindowMinSize(renderWidth, renderHeight);
     defer rl.closeWindow();
 
     rl.setTargetFPS(60);
 
-    // init camera
+    // scene camera
     var camera: rl.Camera2D = rl.Camera2D{
-        .target = .{ .x = screenWidth / -2, .y = screenHeight / -2 },
+        .target = .{ .x = renderWidth / -2, .y = renderHeight / -2 },
         .offset = .{ .x = 0, .y = 0 },
         .rotation = 0,
         .zoom = 1,
     };
+
+    // render target texture
+    const renderTarget: rl.RenderTexture2D = rl.loadRenderTexture(renderWidth, renderHeight);
 
     // init physics
     const space = cp.cpSpaceNew() orelse return error.GenericError;
@@ -82,6 +90,11 @@ pub fn main() !void {
 
     // game loop
     while (!rl.windowShouldClose() and rl.isKeyUp(rl.KeyboardKey.key_q)) {
+        if (rl.isWindowResized()) {
+            windowWidth = rl.getScreenWidth();
+            windowHeight = rl.getScreenHeight();
+        }
+
         // physics tick here
         cp.cpSpaceStep(space, rl.getFrameTime());
 
@@ -91,20 +104,21 @@ pub fn main() !void {
             wall.update();
         }
 
-        camera.target.x = p.centerPos.x - (screenWidth / 2);
-        camera.target.y = -p.centerPos.y - (screenHeight / 2);
+        camera.target.x = p.centerPos.x - (renderWidth / 2);
+        camera.target.y = -p.centerPos.y - (renderHeight / 2);
 
         // draw everything
         {
-            rl.beginDrawing();
-            defer rl.endDrawing();
-
-            rl.clearBackground(rl.Color.white);
-
             {
-                // draw 2d scene
+                // render to the texture
+                rl.beginTextureMode(renderTarget);
+                defer rl.endTextureMode();
+
+                // render what camera sees
                 rl.beginMode2D(camera);
                 defer rl.endMode2D();
+
+                rl.clearBackground(rl.Color.white);
 
                 p.draw();
 
@@ -112,6 +126,14 @@ pub fn main() !void {
                     wall.draw();
                 }
             }
+
+            rl.beginDrawing();
+            defer rl.endDrawing();
+
+            const srcRect: rl.Rectangle = rl.Rectangle.init(0, 0, renderWidth, -renderHeight);
+            const destRect: rl.Rectangle = rl.Rectangle.init(0, 0, @floatFromInt(windowWidth), @floatFromInt(windowHeight));
+            const originVec: rl.Vector2 = rl.Vector2.init(0, 0);
+            rl.drawTexturePro(renderTarget.texture, srcRect, destRect, originVec, 0, rl.Color.white);
 
             // draw ui and screen space stuff
             rl.drawText("dungeon time", 190, 200, 20, rl.Color.light_gray);
