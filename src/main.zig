@@ -90,6 +90,9 @@ pub fn main() !void {
 
     // game loop
     while (!rl.windowShouldClose() and rl.isKeyUp(rl.KeyboardKey.key_q)) {
+        if (rl.isKeyPressed(rl.KeyboardKey.key_f11)) {
+            rl.toggleBorderlessWindowed();
+        }
         if (rl.isWindowResized()) {
             windowWidth = rl.getScreenWidth();
             windowHeight = rl.getScreenHeight();
